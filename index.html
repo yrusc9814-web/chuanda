@@ -294,6 +294,92 @@ textarea.fc{resize:none;min-height:64px;line-height:1.55;}
 ::-webkit-scrollbar{width:3px;}
 ::-webkit-scrollbar-track{background:transparent;}
 ::-webkit-scrollbar-thumb{background:var(--bd);border-radius:2px;}
+
+/* ── 天气卡片 (Weather Card) ── */
+.wx-card{
+  background:linear-gradient(135deg,#2a1a38 0%,#3d2455 60%,#5c2e6e 100%);
+  border-radius:var(--r-xl);padding:16px 18px 14px;margin-bottom:11px;
+  position:relative;overflow:hidden;color:#fff;
+}
+.wx-card::before{
+  content:'';position:absolute;top:-30px;left:-30px;
+  width:120px;height:120px;
+  background:radial-gradient(circle,rgba(197,184,232,.18),transparent 70%);
+}
+.wx-card::after{
+  content:'';position:absolute;bottom:-20px;right:-20px;
+  width:90px;height:90px;
+  background:radial-gradient(circle,rgba(242,167,184,.14),transparent 70%);
+}
+.wx-header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:10px;position:relative;z-index:1;}
+.wx-main{display:flex;align-items:center;gap:11px;}
+.wx-icon{font-size:2rem;line-height:1;filter:drop-shadow(0 2px 4px rgba(0,0,0,.25));}
+.wx-temp{font-size:1.8rem;font-weight:600;letter-spacing:-.02em;line-height:1;}
+.wx-unit{font-size:.85rem;opacity:.7;margin-top:4px;}
+.wx-info{display:flex;flex-direction:column;gap:2px;}
+.wx-cond{font-size:.82rem;font-weight:500;color:rgba(255,255,255,.9);}
+.wx-city{font-size:.7rem;color:rgba(255,255,255,.55);display:flex;align-items:center;gap:3px;}
+.wx-status-row{display:flex;align-items:center;gap:6px;position:relative;z-index:1;}
+.wx-badge{
+  font-size:.65rem;padding:3px 9px;border-radius:var(--r-f);
+  display:inline-flex;align-items:center;gap:4px;font-weight:500;
+}
+.wx-badge-auto{background:rgba(109,184,107,.28);color:#8ee88c;border:1px solid rgba(109,184,107,.3);}
+.wx-badge-manual{background:rgba(232,168,74,.22);color:#ffd280;border:1px solid rgba(232,168,74,.28);}
+.wx-badge-err{background:rgba(224,112,112,.22);color:#ffb0b0;border:1px solid rgba(224,112,112,.28);}
+.wx-badge-loading{background:rgba(197,184,232,.18);color:rgba(255,255,255,.65);border:1px solid rgba(197,184,232,.2);}
+/* 失败原因行 */
+.wx-fail-reason{
+  margin-top:7px;padding:6px 10px;
+  background:rgba(224,112,112,.15);border:1px solid rgba(224,112,112,.22);
+  border-radius:var(--r-sm);font-size:.68rem;color:rgba(255,180,180,.9);
+  line-height:1.5;position:relative;z-index:1;
+}
+.wx-refresh-btn{
+  margin-left:auto;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.16);
+  color:rgba(255,255,255,.7);font-size:.68rem;padding:3px 8px;border-radius:var(--r-f);
+  cursor:pointer;font-family:inherit;transition:all var(--dur) var(--ease);
+  -webkit-tap-highlight-color:transparent;
+}
+.wx-refresh-btn:active{background:rgba(255,255,255,.2);}
+/* 手动输入区域 */
+.wx-manual{
+  margin-top:10px;padding-top:10px;
+  border-top:1px solid rgba(255,255,255,.1);
+  position:relative;z-index:1;
+}
+.wx-manual-row{display:flex;gap:8px;align-items:center;}
+.wx-manual-label{font-size:.68rem;color:rgba(255,255,255,.55);white-space:nowrap;}
+.wx-manual-input{
+  flex:1;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.18);
+  color:#fff;border-radius:var(--r-sm);padding:5px 9px;font-size:.78rem;font-family:inherit;outline:none;
+  transition:border-color var(--dur) var(--ease);
+}
+.wx-manual-input::placeholder{color:rgba(255,255,255,.35);}
+.wx-manual-input:focus{border-color:rgba(197,184,232,.6);}
+.wx-manual-select{
+  flex:1;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.18);
+  color:#fff;border-radius:var(--r-sm);padding:5px 9px;font-size:.78rem;font-family:inherit;
+  outline:none;appearance:none;cursor:pointer;
+}
+.wx-manual-select option{background:#3d2455;color:#fff;}
+.wx-toggle-manual{
+  font-size:.65rem;color:rgba(255,255,255,.45);text-decoration:underline;
+  cursor:pointer;white-space:nowrap;background:none;border:none;
+  font-family:inherit;-webkit-tap-highlight-color:transparent;
+}
+.wx-toggle-manual:hover{color:rgba(255,255,255,.7);}
+.wx-suggest{
+  margin-top:8px;font-size:.68rem;color:rgba(255,255,255,.55);line-height:1.5;
+  padding:7px 9px;background:rgba(255,255,255,.07);border-radius:var(--r-sm);
+  font-style:italic;
+}
+/* 天气适配标记 */
+.wx-fit-badge{
+  font-size:.62rem;padding:2px 6px;border-radius:var(--r-f);margin-left:4px;
+  background:rgba(109,184,107,.25);color:#8ee88c;border:1px solid rgba(109,184,107,.25);
+  vertical-align:middle;white-space:nowrap;
+}
 </style>
 </head>
 <body>
@@ -368,6 +454,57 @@ textarea.fc{resize:none;min-height:64px;line-height:1.55;}
 
   <!-- AI PAGE -->
   <section class="page" id="page-ai">
+
+    <!-- ★ 天气卡片：优先自动定位，失败降级手动输入 -->
+    <div class="wx-card" id="wxCard">
+      <div class="wx-header">
+        <div class="wx-main">
+          <div class="wx-icon" id="wxIcon">🌡️</div>
+          <div class="wx-info">
+            <div style="display:flex;align-items:baseline;gap:4px">
+              <span class="wx-temp" id="wxTemp">--</span>
+              <span class="wx-unit">℃</span>
+            </div>
+            <div class="wx-cond" id="wxCond">正在获取天气…</div>
+            <div class="wx-city" id="wxCity">📍 定位中</div>
+          </div>
+        </div>
+        <button class="wx-refresh-btn" id="btnWxRefresh" title="重新获取天气">↻ 刷新</button>
+      </div>
+      <div class="wx-status-row">
+        <span class="wx-badge wx-badge-loading" id="wxBadge">⌛ 获取中…</span>
+        <button class="wx-toggle-manual" id="btnWxManual">手动输入</button>
+      </div>
+      <!-- 失败原因提示行（降级时显示） -->
+      <div class="wx-fail-reason" id="wxFailReason" style="display:none"></div>
+      <!-- 手动输入区（默认隐藏，自动降级时或点击后显示） -->
+      <div class="wx-manual" id="wxManual" style="display:none">
+        <div class="wx-manual-row" style="margin-bottom:7px">
+          <span class="wx-manual-label">温度 ℃</span>
+          <input type="number" class="wx-manual-input" id="wxManualTemp" placeholder="如：22" min="-30" max="50" style="max-width:80px">
+          <span class="wx-manual-label" style="margin-left:4px">天气</span>
+          <select class="wx-manual-select" id="wxManualCond">
+            <option value="sunny">☀️ 晴天</option>
+            <option value="cloudy">⛅ 多云</option>
+            <option value="overcast">☁️ 阴天</option>
+            <option value="rainy">🌧️ 下雨</option>
+            <option value="snowy">🌨️ 下雪</option>
+            <option value="windy">💨 有风</option>
+            <option value="foggy">🌫️ 雾霾</option>
+          </select>
+        </div>
+        <div class="wx-manual-row">
+          <span class="wx-manual-label">城市</span>
+          <input type="text" class="wx-manual-input" id="wxManualCity" placeholder="如：上海" maxlength="20">
+          <button class="wx-refresh-btn" id="btnWxApply" style="white-space:nowrap">✓ 确认</button>
+        </div>
+        <div style="font-size:.63rem;color:rgba(255,255,255,.35);margin-top:6px">
+          💡 建议通过本地静态服务器（如 VS Code Live Server）打开以启用自动天气
+        </div>
+      </div>
+      <div class="wx-suggest" id="wxSuggest" style="display:none"></div>
+    </div>
+
     <div class="ai-hero">
       <div class="ai-ttl">✦ AI 穿搭灵感</div>
       <div class="ai-sub">根据你的衣橱，智能生成专属搭配建议</div>
@@ -692,6 +829,21 @@ const S={
   wbType:'top', aiSeason:'all', aiStyle:'all',
   cImg:'', cropImg:null, processedCanvas:null, aiResults:[],
   dr:{top:null,bottom:null,shoes:null}
+};
+
+/* ── ★ 天气状态管理 (Weather State) ──
+   status:     'loading' | 'auto' | 'manual' | 'error'
+   failReason: string   — 显示在卡片中的失败原因（人类可读）
+   tierLog:    string[] — 每层降级日志（调试用）
+*/
+const weatherState = {
+  status:     'loading',
+  temp:       null,
+  cond:       'sunny',   // sunny / cloudy / overcast / rainy / snowy / windy / foggy
+  city:       '',
+  source:     '',        // 'geo' | 'ip' | 'manual'
+  failReason: '',        // 非空时在卡片显示
+  tierLog:    []         // 三层日志，不影响 UI
 };
 
 /* ═══════════════════════════════════════
@@ -1045,6 +1197,383 @@ function tryOnClothes(id){
   renderDrFig();updateDrSlots();
 }
 
+/* ═══════════════════════════════════════════════
+   ★ 天气模块 — Weather Module
+   优先级：Geolocation → IP定位 → 手动输入
+═══════════════════════════════════════════════ */
+
+/* 天气状况图标映射 */
+const WX_ICONS = {
+  sunny:'☀️', cloudy:'⛅', overcast:'☁️',
+  rainy:'🌧️', snowy:'🌨️', windy:'💨', foggy:'🌫️'
+};
+/* Open-Meteo WMO 天气码 → 内部 cond */
+const WMO_MAP = {
+  0:'sunny',1:'sunny',2:'cloudy',3:'overcast',
+  45:'foggy',48:'foggy',51:'rainy',53:'rainy',55:'rainy',
+  61:'rainy',63:'rainy',65:'rainy',71:'snowy',73:'snowy',75:'snowy',
+  77:'snowy',80:'rainy',81:'rainy',82:'rainy',85:'snowy',86:'snowy',
+  95:'rainy',96:'rainy',99:'rainy'
+};
+const WX_LABEL = {sunny:'晴天',cloudy:'多云',overcast:'阴天',rainy:'下雨',snowy:'下雪',windy:'有风',foggy:'雾霾'};
+
+/* 根据温度判断季节（辅助推荐） */
+function tempToSeason(t){
+  if(t===null)return 'all';
+  if(t>=28)return 'summer';
+  if(t>=18)return 'spring';
+  if(t>=8) return 'autumn';
+  return 'winter';
+}
+
+/* ─────────────────────────────────────────────
+   渲染天气卡片 UI
+───────────────────────────────────────────── */
+function renderWxCard(){
+  const ws = weatherState;
+  const tempEl      = document.getElementById('wxTemp');
+  const condEl      = document.getElementById('wxCond');
+  const cityEl      = document.getElementById('wxCity');
+  const iconEl      = document.getElementById('wxIcon');
+  const badgeEl     = document.getElementById('wxBadge');
+  const suggestEl   = document.getElementById('wxSuggest');
+  const failEl      = document.getElementById('wxFailReason');
+
+  if(!tempEl) return; // AI 页尚未挂载
+
+  /* 温度 / 天气状况 / 城市 */
+  tempEl.textContent = ws.temp !== null ? ws.temp : '--';
+  condEl.textContent = ws.temp !== null ? (WX_LABEL[ws.cond] || ws.cond) : '天气未知';
+  cityEl.textContent = ws.city ? `📍 ${ws.city}` : '📍 位置未知';
+  iconEl.textContent = WX_ICONS[ws.cond] || '🌡️';
+
+  /* 状态徽章 */
+  badgeEl.className = 'wx-badge';
+  switch(ws.status){
+    case 'loading': badgeEl.classList.add('wx-badge-loading'); badgeEl.textContent='⌛ 获取中…';   break;
+    case 'auto':    badgeEl.classList.add('wx-badge-auto');    badgeEl.textContent='✓ 自动获取';  break;
+    case 'manual':  badgeEl.classList.add('wx-badge-manual');  badgeEl.textContent='✏️ 手动模式'; break;
+    default:        badgeEl.classList.add('wx-badge-err');     badgeEl.textContent='✕ 已降级手动模式'; break;
+  }
+
+  /* 失败原因行 */
+  if(ws.failReason && ws.status !== 'auto' && ws.status !== 'manual'){
+    failEl.style.display = '';
+    failEl.textContent   = '⚠ ' + ws.failReason;
+  } else if(ws.status === 'manual' && ws.failReason) {
+    // 手动模式下仍显示上次失败原因（灰色）
+    failEl.style.display = '';
+    failEl.style.background = 'rgba(255,255,255,.07)';
+    failEl.style.borderColor = 'rgba(255,255,255,.1)';
+    failEl.style.color = 'rgba(255,255,255,.4)';
+    failEl.textContent = '已切换为手动天气模式（' + ws.failReason + '）';
+  } else {
+    failEl.style.display = 'none';
+  }
+
+  /* 穿搭建议小提示 */
+  if(ws.temp !== null){
+    suggestEl.style.display = '';
+    suggestEl.textContent   = buildWxSuggestHint(ws.temp, ws.cond);
+  } else {
+    suggestEl.style.display = 'none';
+  }
+}
+
+/* 生成天气穿搭小提示 */
+function buildWxSuggestHint(temp, cond){
+  if(temp>=30) return `🔥 今日 ${temp}℃，炎热！建议轻薄透气单品，避免深色厚料。`;
+  if(temp>=25) return `☀️ 今日 ${temp}℃，温暖。短袖、裙装或棉麻材质正好。`;
+  if(temp>=20) return `🌸 今日 ${temp}℃，舒适。薄外套备用，早晚可能偏凉。`;
+  if(temp>=15) return `🍃 今日 ${temp}℃，清爽。建议叠穿，长袖或薄针织较合适。`;
+  if(temp>=8)  return `🍂 今日 ${temp}℃，偏凉。建议加外套或厚针织衫。`;
+  if(temp>=0)  return `🧥 今日 ${temp}℃，较冷。厚外套 + 保暖下装是首选。`;
+  return        `❄️ 今日 ${temp}℃，严寒。羽绒或厚呢大衣必备，注意保暖。`;
+}
+
+/* 展示手动输入区并可选设置原因 */
+function showWxManual(reason){
+  if(reason) weatherState.failReason = reason;
+  const m = document.getElementById('wxManual');
+  if(m) m.style.display = '';
+}
+
+/* 应用手动天气输入 */
+function applyManualWeather(){
+  const tempVal = parseInt(document.getElementById('wxManualTemp').value);
+  const condVal = document.getElementById('wxManualCond').value;
+  const cityVal = document.getElementById('wxManualCity').value.trim();
+  if(isNaN(tempVal)){ Toast.warn('请输入有效温度（整数）'); return; }
+  weatherState.temp       = tempVal;
+  weatherState.cond       = condVal;
+  weatherState.city       = cityVal || '手动城市';
+  weatherState.status     = 'manual';
+  weatherState.source     = 'manual';
+  // 保留 failReason 但转成灰色提示（renderWxCard 处理）
+  document.getElementById('wxManual').style.display = 'none';
+  renderWxCard();
+  Toast.ok('天气已更新 ✓');
+}
+
+/* ─────────────────────────────────────────────
+   ★ 三层天气降级获取流程
+   Tier 1 → geolocation + Open-Meteo
+   Tier 2 → IP定位 + Open-Meteo
+   Tier 3 → 手动输入（兜底）
+   任意一层抛错 → 立即进入下一层，绝不让页面崩溃
+───────────────────────────────────────────── */
+
+/* 内部工具：记录降级日志 */
+function wxLog(msg){ weatherState.tierLog.push(msg); }
+
+/* Open-Meteo 免费天气 API（只需经纬度，无 Key） */
+async function fetchOpenMeteo(lat, lon){
+  const url =
+    `https://api.open-meteo.com/v1/forecast` +
+    `?latitude=${lat}&longitude=${lon}` +
+    `&current=temperature_2m,weathercode,windspeed_10m&timezone=auto`;
+  const res  = await fetch(url, {signal: AbortSignal.timeout(8000)});
+  if(!res.ok) throw new Error(`Open-Meteo HTTP ${res.status}`);
+  const data = await res.json();
+  if(!data.current) throw new Error('Open-Meteo 返回数据异常');
+  const cur  = data.current;
+  const temp = Math.round(cur.temperature_2m);
+  let   cond = WMO_MAP[cur.weathercode] || 'cloudy';
+  if(cur.windspeed_10m > 30 && cond === 'sunny') cond = 'windy';
+  return {temp, cond};
+}
+
+/* IP定位 —— ip-api.com（主） */
+async function fetchIpGeo(){
+  const res  = await fetch(
+    'https://ip-api.com/json/?lang=zh-CN&fields=status,city,lat,lon',
+    {signal: AbortSignal.timeout(5000)}
+  );
+  if(!res.ok) throw new Error(`ip-api HTTP ${res.status}`);
+  const data = await res.json();
+  if(data.status !== 'success') throw new Error('ip-api 状态非 success');
+  return {city: data.city||'未知城市', lat: data.lat, lon: data.lon};
+}
+
+/* IP定位 —— ipapi.co（备） */
+async function fetchIpApiCo(){
+  const res  = await fetch('https://ipapi.co/json/', {signal: AbortSignal.timeout(5000)});
+  if(!res.ok) throw new Error(`ipapi.co HTTP ${res.status}`);
+  const data = await res.json();
+  if(!data.latitude) throw new Error('ipapi.co 无坐标');
+  return {city: data.city||data.region||'未知城市', lat: data.latitude, lon: data.longitude};
+}
+
+/* 将 GeolocationPositionError code 转为中文原因 */
+function geoErrReason(err){
+  if(!err) return '定位失败';
+  switch(err.code){
+    case 1: return '定位权限被拒绝';
+    case 2: return '定位服务不可用';
+    case 3: return '定位请求超时';
+    default: return '定位失败（未知原因）';
+  }
+}
+
+/* ── Tier 1：Geolocation + Open-Meteo ── */
+async function wxTier1(){
+  /* 前置检查：file:// 协议直接跳过 */
+  if(location.protocol === 'file:'){
+    const r = '当前运行环境不支持自动定位（file:// 协议）';
+    wxLog('[Tier1 SKIP] ' + r);
+    throw new Error(r);
+  }
+  /* 前置检查：浏览器不支持 Geolocation */
+  if(!navigator.geolocation){
+    const r = '浏览器不支持定位功能';
+    wxLog('[Tier1 SKIP] ' + r);
+    throw new Error(r);
+  }
+
+  /* 请求 Geolocation */
+  let pos;
+  try {
+    pos = await new Promise((resolve, reject) => {
+      navigator.geolocation.getCurrentPosition(resolve, reject, {
+        timeout: 7000, maximumAge: 300000, enableHighAccuracy: false
+      });
+    });
+    wxLog('[Tier1] Geolocation 成功');
+  } catch(geoErr){
+    const r = geoErrReason(geoErr);
+    wxLog('[Tier1 FAIL] Geolocation: ' + r);
+    throw new Error(r);
+  }
+
+  /* 获取天气 */
+  let wxData;
+  try {
+    wxData = await fetchOpenMeteo(pos.coords.latitude, pos.coords.longitude);
+    wxLog('[Tier1] Open-Meteo 成功');
+  } catch(wxErr){
+    const r = '天气接口请求失败（' + wxErr.message + '）';
+    wxLog('[Tier1 FAIL] Open-Meteo: ' + r);
+    throw new Error(r);
+  }
+
+  /* 尽量取城市名（失败不影响整体） */
+  let city = '当前位置';
+  try {
+    const ipData = await fetchIpGeo().catch(()=>fetchIpApiCo());
+    city = ipData.city;
+    wxLog('[Tier1] 城市名: ' + city);
+  } catch(e){ wxLog('[Tier1] 城市名获取失败，使用默认'); }
+
+  return {temp: wxData.temp, cond: wxData.cond, city, source: 'geo'};
+}
+
+/* ── Tier 2：IP 定位 + Open-Meteo ── */
+async function wxTier2(){
+  /* file:// 下 fetch 被浏览器拦截，直接跳过 */
+  if(location.protocol === 'file:'){
+    const r = '当前运行环境不支持网络请求（file:// 协议）';
+    wxLog('[Tier2 SKIP] ' + r);
+    throw new Error(r);
+  }
+
+  /* 尝试 IP 定位（双备份） */
+  let ipData;
+  try {
+    ipData = await fetchIpGeo();
+    wxLog('[Tier2] ip-api.com 成功');
+  } catch(e1){
+    wxLog('[Tier2] ip-api.com 失败: ' + e1.message + '，尝试备用');
+    try {
+      ipData = await fetchIpApiCo();
+      wxLog('[Tier2] ipapi.co 成功');
+    } catch(e2){
+      const r = 'IP 定位失败（' + e2.message + '）';
+      wxLog('[Tier2 FAIL] ' + r);
+      throw new Error(r);
+    }
+  }
+
+  /* 获取天气 */
+  let wxData;
+  try {
+    wxData = await fetchOpenMeteo(ipData.lat, ipData.lon);
+    wxLog('[Tier2] Open-Meteo 成功');
+  } catch(wxErr){
+    const r = '天气接口请求失败（' + wxErr.message + '）';
+    wxLog('[Tier2 FAIL] Open-Meteo: ' + r);
+    throw new Error(r);
+  }
+
+  return {temp: wxData.temp, cond: wxData.cond, city: ipData.city, source: 'ip'};
+}
+
+/* ── Tier 3：手动输入（终极兜底，永不抛出） ── */
+function wxTier3(reason){
+  wxLog('[Tier3] 进入手动模式，原因: ' + (reason||'未知'));
+  weatherState.status     = 'error';
+  weatherState.source     = 'manual';
+  weatherState.failReason = reason || '自动获取失败';
+  showWxManual();
+  renderWxCard();
+  /* file:// 不弹 Toast（用户不一定能解决），其他环境提示 */
+  if(location.protocol !== 'file:'){
+    Toast.warn('天气自动获取失败，请手动输入');
+  }
+}
+
+/* ── 主调度函数 ── */
+async function fetchWeather(){
+  /* 重置状态，开始新一轮获取 */
+  weatherState.status     = 'loading';
+  weatherState.temp       = null;
+  weatherState.cond       = 'sunny';
+  weatherState.city       = '';
+  weatherState.source     = '';
+  weatherState.failReason = '';
+  weatherState.tierLog    = [];
+  renderWxCard();
+
+  /* Tier 1 */
+  let t1reason = '';
+  try {
+    const r = await wxTier1();
+    weatherState.temp   = r.temp;
+    weatherState.cond   = r.cond;
+    weatherState.city   = r.city;
+    weatherState.source = r.source;
+    weatherState.status = 'auto';
+    renderWxCard();
+    return; // ✓ 成功，退出
+  } catch(e){
+    t1reason = e.message;
+    wxLog('[Dispatch] Tier1 失败，尝试 Tier2');
+  }
+
+  /* Tier 2 */
+  let t2reason = '';
+  try {
+    const r = await wxTier2();
+    weatherState.temp   = r.temp;
+    weatherState.cond   = r.cond;
+    weatherState.city   = r.city;
+    weatherState.source = r.source;
+    weatherState.status = 'auto';
+    /* Tier2 成功仍记录 Tier1 的失败原因（轻提示） */
+    weatherState.failReason = '';
+    renderWxCard();
+    return; // ✓ 成功，退出
+  } catch(e){
+    t2reason = e.message;
+    wxLog('[Dispatch] Tier2 失败，进入 Tier3');
+  }
+
+  /* Tier 3 — 最终降级到手动，组合两层失败原因 */
+  const combined = t1reason === t2reason
+    ? t1reason   // 两层原因相同时只显示一次
+    : [t1reason, t2reason].filter(Boolean).join('；');
+  wxTier3(combined);
+}
+
+/* ── 初始化天气模块 ── */
+function initWeather(){
+  /* 刷新按钮：重新跑完整三层流程 */
+  document.getElementById('btnWxRefresh').addEventListener('click', ()=>{
+    const m = document.getElementById('wxManual');
+    if(m) m.style.display = 'none';
+    const fr = document.getElementById('wxFailReason');
+    if(fr){ fr.style.display='none'; fr.removeAttribute('style'); }
+    fetchWeather();
+  });
+
+  /* 切换手动输入显隐 */
+  document.getElementById('btnWxManual').addEventListener('click', ()=>{
+    const m = document.getElementById('wxManual');
+    if(m) m.style.display = m.style.display === 'none' ? '' : 'none';
+  });
+
+  /* 确认按钮 & 回车 */
+  document.getElementById('btnWxApply').addEventListener('click', applyManualWeather);
+  ['wxManualTemp','wxManualCity'].forEach(id=>{
+    document.getElementById(id).addEventListener('keydown', e=>{ if(e.key==='Enter') applyManualWeather(); });
+  });
+
+  /* 手动输入实时预览（change 事件） */
+  ['wxManualTemp','wxManualCond'].forEach(id=>{
+    document.getElementById(id).addEventListener('change', ()=>{
+      const t = parseInt(document.getElementById('wxManualTemp').value);
+      const c = document.getElementById('wxManualCond').value;
+      if(!isNaN(t)){
+        weatherState.temp = t;
+        weatherState.cond = c;
+        renderWxCard();
+      }
+    });
+  });
+
+  /* 自动拉取，异步，任何异常都在内部处理，绝不冒泡到页面 */
+  fetchWeather().catch(()=>{ wxTier3('未知错误，已进入手动模式'); });
+}
+
 /* ── AI Recommendations ── */
 const STAGS={all:['全年百搭','经典永恒','四季通用'],spring:['春日踏青','清新花朵','春日约会'],summer:['清凉一夏','度假风情','夏日活力'],autumn:['秋日氛围','叠层穿搭','秋色橙棕'],winter:['冬日暖意','大衣叠穿','雪日出行']};
 const YTAGS={all:['随性百搭','日常简约','无压穿搭'],casual:['休闲慵懒','周末舒适','街头随性'],office:['通勤干练','职场知性','简约精英'],sweet:['甜美少女','粉嫩可爱','仙气飘飘'],cool:['酷飒中性','暗黑少女','帅气利落']};
@@ -1060,6 +1589,8 @@ function initAI(){
     document.querySelectorAll('#fStyle .f-chip').forEach(x=>x.classList.remove('on'));c.classList.add('on');S.aiStyle=c.dataset.y;
   });
   document.getElementById('btnGen').addEventListener('click',generateAI);
+  /* ★ 初始化天气模块 */
+  initWeather();
 }
 
 function generateAI(){
@@ -1073,14 +1604,43 @@ function generateAI(){
   setTimeout(()=>{
     btn.disabled=false;btn.innerHTML='✨ 重新生成';
     const st=STAGS[S.aiSeason]||STAGS.all,sy=YTAGS[S.aiStyle]||YTAGS.all;
-    const sT=shuffle(tops),sB=shuffle(bots),sS=shuffle(shoes);
+
+    /* ★ 天气感知：当有天气数据时，对衣物按天气适配度打分排序 */
+    const wx = weatherState;
+    const hasWeather = wx.temp !== null;
+
+    const scoreSort = (arr) => {
+      if(!hasWeather) return shuffle(arr);
+      // 每件衣物算天气适配分，分高的排前面；相同分的内部随机
+      return arr.map(item=>({item, score:getWeatherFitScore(item,wx.temp,wx.cond)+Math.random()*0.5}))
+                .sort((a,b)=>b.score-a.score)
+                .map(x=>x.item);
+    };
+
+    const sT=scoreSort(tops), sB=scoreSort(bots), sS=scoreSort(shoes);
     const uT=new Set(),uB=new Set(),uSH=new Set();
+
+    /* 季节：若有天气数据且用户选了"全季"，则自动推断季节标签 */
+    const autoSeason = (S.aiSeason==='all' && hasWeather) ? tempToSeason(wx.temp) : S.aiSeason;
+    const stFinal = STAGS[autoSeason] || STAGS.all;
+
     S.aiResults=Array.from({length:3},(_,i)=>{
       const top=sT.find(x=>!uT.has(x.id))||(tops[0]||null);
       const bot=sB.find(x=>!uB.has(x.id))||(bots[0]||null);
       const shoe=sS.find(x=>!uSH.has(x.id))||(shoes[0]||null);
       if(top)uT.add(top.id);if(bot)uB.add(bot.id);if(shoe)uSH.add(shoe.id);
-      return{top,bot,shoe,tag:`${st[i%st.length]} · ${sy[i%sy.length]}`,reason:REASONS[~~(Math.random()*REASONS.length)]};
+
+      const baseReason = REASONS[~~(Math.random()*REASONS.length)];
+      /* ★ 叠加天气推荐理由 */
+      const reason = buildWeatherReason(top, bot, shoe, wx.temp, wx.cond, baseReason);
+
+      /* ★ 在 tag 中显示天气信息 */
+      const seasonTag = stFinal[i%stFinal.length];
+      const styleTag  = (YTAGS[S.aiStyle]||YTAGS.all)[i%(YTAGS[S.aiStyle]||YTAGS.all).length];
+      const weatherTag = hasWeather ? ` · ${wx.temp}℃` : '';
+      const tag = `${seasonTag} · ${styleTag}${weatherTag}`;
+
+      return{top,bot,shoe,tag,reason,hasWeather,wxTemp:wx.temp,wxCond:wx.cond};
     });
     const frag=document.createDocumentFragment();
     S.aiResults.forEach((r,i)=>{const w=document.createElement('div');w.innerHTML=buildAICard(r,i);frag.appendChild(w.firstElementChild);});
@@ -1088,18 +1648,27 @@ function generateAI(){
   },900);
 }
 
-/* ★ buildAICard — 含小人预览的AI推荐卡片 */
-function buildAICard({top,bot,shoe,tag,reason},idx){
+/* ★ buildAICard — 含小人预览的AI推荐卡片（支持天气标注） */
+function buildAICard({top,bot,shoe,tag,reason,hasWeather,wxTemp,wxCond},idx){
   const row=(item,ico,lbl)=>{
     if(!item)return'';
     const imgEl=item.img?`<img class="ai-item-img" src="${item.img}" alt="${item.name}" loading="lazy">`:`<div class="ai-item-ph">${ico}</div>`;
-    return`<div class="ai-item">${imgEl}<span class="ai-item-type">${lbl}</span><span class="ai-item-name">${item.name}${item.note?' · '+item.note:''}</span></div>`;
+    /* ★ 天气适配徽章：若适配分 ≥ 7 则显示 */
+    const fitScore = hasWeather ? getWeatherFitScore(item, wxTemp, wxCond) : 0;
+    const fitBadge = (hasWeather && fitScore >= 7) ? `<span class="wx-fit-badge">🌤 适合今日</span>` : '';
+    return`<div class="ai-item">${imgEl}<span class="ai-item-type">${lbl}</span><span class="ai-item-name">${item.name}${item.note?' · '+item.note:''}${fitBadge}</span></div>`;
   };
   const figSvg=makeFigure(top,bot,shoe,'ai'+idx+(Date.now()%9999));
+  /* ★ 若有天气，在 ai-chip 旁补天气图标 */
+  const wxBadgeHtml = hasWeather
+    ? `<span style="font-size:.66rem;color:var(--tx-s);margin-left:4px">${WX_ICONS[wxCond]||''} ${wxTemp}℃</span>`
+    : '';
   return`<div class="ai-card">
   <div class="ai-card-hd">
     <div class="ai-num">${idx+1}</div>
-    <div class="ai-chip">${tag}</div>
+    <div style="display:flex;align-items:center;flex:1;min-width:0;margin-left:8px">
+      <div class="ai-chip">${tag}</div>${wxBadgeHtml}
+    </div>
   </div>
   <div class="ai-card-body">
     <div class="ai-card-detail">
@@ -1230,7 +1799,19 @@ function updateStats(){
 }
 
 function exportData(){
-  const blob=new Blob([JSON.stringify({version:'5.0',exportedAt:new Date().toISOString(),outfits:DB.get(K.OUTFITS),clothes:DB.get(K.CLOTHES)},null,2)],{type:'application/json'});
+  /* ★ 导出时附带当前天气偏好（手动模式时保留） */
+  const wxSnapshot = weatherState.status === 'manual' ? {
+    temp: weatherState.temp,
+    cond: weatherState.cond,
+    city: weatherState.city
+  } : null;
+  const blob=new Blob([JSON.stringify({
+    version:'5.1',
+    exportedAt:new Date().toISOString(),
+    outfits:DB.get(K.OUTFITS),
+    clothes:DB.get(K.CLOTHES),
+    weatherPrefs: wxSnapshot   // 仅手动天气才保留到备份
+  },null,2)],{type:'application/json'});
   const url=URL.createObjectURL(blob),a=document.createElement('a');
   a.href=url;a.download=`ootd_backup_${new Date().toISOString().slice(0,10)}.json`;
   document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(url);
@@ -1245,6 +1826,15 @@ function importData(file){
       const data=JSON.parse(e.target.result);
       if(!Array.isArray(data.outfits)||!Array.isArray(data.clothes))throw new Error('数据格式不正确');
       DB.saveNow(K.OUTFITS,data.outfits);DB.saveNow(K.CLOTHES,data.clothes);
+      /* ★ 恢复天气偏好（如果备份中有手动天气记录） */
+      if(data.weatherPrefs && data.weatherPrefs.temp != null){
+        weatherState.temp   = data.weatherPrefs.temp;
+        weatherState.cond   = data.weatherPrefs.cond || 'sunny';
+        weatherState.city   = data.weatherPrefs.city || '';
+        weatherState.status = 'manual';
+        weatherState.source = 'manual';
+        renderWxCard();
+      }
       Modal.close('mExport');renderOutfits();renderClothes();
       Toast.ok(`导入成功：${data.outfits.length} 条穿搭，${data.clothes.length} 件衣物 ✓`);
     }catch(err){Toast.err('导入失败：'+err.message);}
